@@ -17,7 +17,7 @@ main = do
 solution :: [String] -> Maybe Int
 solution singleLines = counted
   where
-    counted = sequence maybeExtracted >>= return . count validPassword
+    counted = sequence maybeExtracted >>= return . count validPassword2
     maybeExtracted = map extractMaybe policyExtracted
     policyExtracted = map (\(pol, b) -> (passPolicy pol, b)) 
                     $ map (\str -> let (a,b) = break (== ':') str
@@ -26,8 +26,15 @@ solution singleLines = counted
 count :: (Foldable t) => (a -> Bool) -> t a -> Int
 count pr = foldl' (\acc a -> if pr a then acc + 1 else acc) 0
 
+
+validPassword :: ((Int, Int, Char), String) -> Bool
 validPassword ((min, max, c), ps) = liftM2 (&&) (<= max) (>= min) charCount
   where charCount = count (== c) ps
+
+validPassword2 :: ((Int, Int, Char), String) -> Bool
+validPassword2 ((i, j, c), ps) = (pred1 || pred2) && not (pred1 && pred2)
+  where pred1 = (ps !! (i - 1) == c)
+        pred2 = (ps !! (j - 1) == c)
 
 extractMaybe :: (Maybe a, b) -> Maybe (a, b)
 extractMaybe (Just a, b) = Just (a, b)
