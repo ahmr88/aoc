@@ -5,6 +5,7 @@ import qualified Data.Text as T
 import Data.List
 import Control.Monad
 
+
 main = do
         let list = []
         handle <- openFile "input" ReadMode
@@ -21,7 +22,7 @@ solution singleLines = counted
     maybeExtracted = map extractMaybe policyExtracted
     policyExtracted = map (\(pol, b) -> (passPolicy pol, b)) 
                     $ map (\str -> let (a,b) = break (== ':') str
-                                   in (a, tail b)) singleLines
+                                   in (a, (tail . tail) b)) singleLines
 
 count :: (Foldable t) => (a -> Bool) -> t a -> Int
 count pr = foldl' (\acc a -> if pr a then acc + 1 else acc) 0
@@ -32,7 +33,7 @@ validPassword ((min, max, c), ps) = liftM2 (&&) (<= max) (>= min) charCount
   where charCount = count (== c) ps
 
 validPassword2 :: ((Int, Int, Char), String) -> Bool
-validPassword2 ((i, j, c), ps) = (pred1 || pred2) && not (pred1 && pred2)
+validPassword2 ((i, j, c), ps) = not (pred1 == pred2)
   where pred1 = (ps !! (i - 1) == c)
         pred2 = (ps !! (j - 1) == c)
 
@@ -52,7 +53,3 @@ passPolicy = aux
     firstTwo _ = Nothing
 
 -- passPolicy str = T.split ((==) ':') str
-
-
-
-
