@@ -16,7 +16,7 @@ main = do
         hClose handle
 
 
-solution1 inp = length $ countLeaves parsed [] "shinygold"
+solution1 inp = length $ countParents parsed [] "shinygold"
   where parsed = parseRules inp
 
 parseRules = map ( mapPair join (
@@ -38,12 +38,15 @@ parseRules = map ( mapPair join (
     replaceWords = ["bag,", "bags,"]
 
 
-countLeaves :: [(String, [(Int, String)])] -> [String] -> String  -> [String]
-countLeaves rules visited bag = 
-  directLeaves ++ nub (concatMap (countLeaves rules (directLeaves ++ visited)) directLeaves)
+countParents :: [(String, [(Int, String)])] -> [String] -> String  -> [String]
+countParents rules visited bag = 
+  directLeaves ++ nub (concatMap (countParents rules (directLeaves ++ visited)) directLeaves)
   where directLeaves = map fst 
                      $ filter (elem bag . map snd .  snd) 
                      $ filter (not . (flip elem $ visited) . fst) rules
+
+countChildren :: [(String, [(Int, String)])] -> String  -> [String]
+-- countChildren rules 
 
 
 splitWhen :: Eq a => (a -> Bool) -> [a] -> [[a]]
