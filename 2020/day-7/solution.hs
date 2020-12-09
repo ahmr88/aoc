@@ -9,8 +9,8 @@ main = do
         contents <- hGetContents handle
         let singleLines = lines contents
         
-        print $ solution1 singleLines
-        -- print $ solution2 singleLines
+        -- print $ solution1 singleLines
+        print $ solution2 singleLines
         -- print $ length singleLines
 
         hClose handle
@@ -18,6 +18,8 @@ main = do
 
 solution1 inp = length $ countParents parsed [] "shinygold"
   where parsed = parseRules inp
+
+solution2 =  (flip countChildren $ "shinygold") . parseRules
 
 parseRules = map ( mapPair join (
              map ( mapPair (read :: String -> Int) id . splitAt 1) 
@@ -45,14 +47,17 @@ countParents rules visited bag =
                      $ filter (elem bag . map snd .  snd) 
                      $ filter (not . (flip elem $ visited) . fst) rules
 
-countChildren :: [(String, [(Int, String)])] -> String  -> [String]
--- countChildren rules 
+countChildren :: [(String, [(Int, String)])] -> String  -> Int
+countChildren rules bag = children
+  where children = case find ((== bag) . fst) rules of
+                     Nothing -> 0
+                     Just (_, []) -> 0
+                     Just (_, xs) -> foldl' (\acc (coef, bag') -> 
+                       acc + coef + (coef * (countChildren rules bag'))) 0 xs
 
 
 splitWhen :: Eq a => (a -> Bool) -> [a] -> [[a]]
 splitWhen f l = foldr (\x acc -> if f x then [] : acc else (x : head acc) : tail acc) [[]] l
-
-solution2 inp = undefined
 
 count :: (Foldable t) => (a -> Bool) -> t a -> Int
 count pr = foldl' (\acc a -> if pr a then acc + 1 else acc) 0
