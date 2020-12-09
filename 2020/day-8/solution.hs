@@ -24,7 +24,14 @@ main = do
 
 solution1 = findLoop 0 [0] . zip [0..] . rights . map (parse parseRules "")
 
-solution2 = undefined
+solution2 inp = filter fil $ map f path
+  where path = findNopJmpPath 0 [0] te []
+        te = zip [0..] $ rights $ map (parse parseRules "") inp
+        fil Nothing = False
+        fil (Just x) = True
+        f (acc, (i:is)) = case te !! i of
+                            (_, Nop x) -> execute acc ((i + x) : i : is) te
+                            (_, Jump _) -> execute acc ((i + 1) : i : is) te
 
 findLoop :: Int -> [Int] -> [(Int, Command)] -> Int
 findLoop v (i:is) prog
@@ -34,6 +41,25 @@ findLoop v (i:is) prog
                   (_, Nop _) -> findLoop v ((i + 1) : i : is) prog
                   (_, Acc x) -> findLoop (v + x) ((i + 1) : i : is) prog
                   (_, Jump x) -> findLoop v ((i + x) : i : is) prog
+
+findNopJmpPath :: Int -> [Int] -> [(Int, Command)] -> [(Int, [Int])] -> [(Int, [Int])]
+findNopJmpPath v (i:is) prog path
+  | i >= length prog = path
+  | i `elem` is = path
+  | otherwise = case prog !! i of
+                  (_, Nop _) -> findNopJmpPath v ((i + 1) : i : is) prog $ (v, i:is) : path
+                  (_, Acc x) -> findNopJmpPath (v + x) ((i + 1) : i : is) prog path
+                  (_, Jump x) -> findNopJmpPath v ((i + x) : i : is) prog $ (v, i:is) : path
+
+
+execute :: Int -> [Int] -> [(Int, Command)] -> Maybe Int
+execute v (i:is) prog
+  | i >= length prog = Just v
+  | i `elem` is = Nothing
+  | otherwise = case prog !! i of
+                  (_, Nop _) -> execute v ((i + 1) : i : is) prog
+                  (_, Acc x) -> execute (v + x) ((i + 1) : i : is) prog
+                  (_, Jump x) -> execute v ((i + x) : i : is) prog
 
 parseRules :: Parser Command
 parseRules = do
