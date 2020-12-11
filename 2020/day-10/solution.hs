@@ -1,16 +1,17 @@
-{-# LANGUAGE OverloadedStrings #-}
+ {-# LANGUAGE OverloadedStrings #-}
 import System.IO
 import Data.List
 import Data.Char
 import Control.Monad.Trans.State
+import Data.Maybe
 
 main = do
         handle <- openFile "input" ReadMode
         contents <- hGetContents handle
         let singleLines = lines contents
         
-        print $ solution1 singleLines
-        -- print $ solution2 singleLines
+        -- print $ solution1 singleLines
+        print $ solution2 singleLines
         -- print $ length singleLines
 
         hClose handle
@@ -21,17 +22,24 @@ solution1 inp = fstTimesThird $ getDiffs (0,0,0) $ 0:sorted
     sorted = sort $ map read inp
     fstTimesThird (x,_,y) = x * y
 
-solution2 inp = map (\x -> (x, [x+1, x+2, x+3])) inp
+solution2 inp = f $ map read inp
 
-  -- map countOf $ filter (/= []) $ tails $ processed
-  -- where processed = 0 : (sorted ++ [last sorted])
-  --       sorted = sort $ map read inp
-
--- countOf (_:[]) = 1
--- countOf (x:xs) = length $ filter ((x + 3) >=)  $ take 3 xs 
-
--- f :: [Int] -> Int
--- f xs = runState
+f :: [Int] -> Int
+f ns = fst $ runState aux (0, sortReved, [])
+  where 
+    aux = do
+      (paths, ns', vis) <- get
+      case ns' of
+        [] -> return paths
+        (x:xs) -> do
+          case childNodes x of
+            [] -> put (1, xs, (x, 1) : vis)
+            chs -> put (sumChldn vis chs, xs, (x, sumChldn vis chs):vis)
+          aux
+    sumChldn vis chs = sum $ map (\c -> fromMaybe 0 $ lookup c vis) chs
+    childNodes x = filter ((x + 3) >=) $ take 3 $ drop 1 $ dropWhile (/= x) sorted
+    sortReved = reverse sorted
+    sorted = sort (0:ns)
 
 
 getDiffs :: (Int, Int, Int) -> [Int] -> (Int, Int, Int)
